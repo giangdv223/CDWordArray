@@ -5,7 +5,12 @@
 typedef unsigned long DWORD;
 typedef long long INT_PTR;
 typedef unsigned char BYTE;
-
+#ifndef max
+#define max(a,b)            (((a) > (b)) ? (a) : (b))
+#endif
+#ifndef min
+#define min(a,b)            (((a) < (b)) ? (a) : (b))
+#endif
 class CDWordArray
 {
 public:
@@ -18,8 +23,7 @@ public:
 	void SetAtGrow(INT_PTR nIndex, DWORD newElement);
 	void SetSize(INT_PTR nNewSize, INT_PTR nGrowBy = -1);
 
-	INT_PTR min(INT_PTR a, INT_PTR b);
-	INT_PTR max(INT_PTR a, INT_PTR b);
+
 
 protected:
 	DWORD* m_pData;
@@ -106,7 +110,6 @@ void CDWordArray::SetSize(INT_PTR nNewSize, INT_PTR nGrowBy)
 		m_pData = NULL;
 		m_nSize = m_nMaxSize = 0;
 	}
-
 	else if (m_pData == NULL)
 	{
 		m_pData = (DWORD*) new BYTE[nNewSize * sizeof(DWORD)];
@@ -176,6 +179,7 @@ INT_PTR CDWordArray::GetSize() const
 
 DWORD CDWordArray::GetAt(INT_PTR nIndex) const
 {
+	assert(m_pData != NULL);
 	assert(nIndex >= 0 || nIndex < m_nSize);
 	return m_pData[nIndex];
 }
@@ -185,15 +189,7 @@ void CDWordArray::RemoveAll()
 	SetSize(0);
 }
 
-INT_PTR CDWordArray::min(INT_PTR a, INT_PTR b)
-{
-	return a <= b ? a : b;
-}
 
-INT_PTR CDWordArray::max(INT_PTR a, INT_PTR b)
-{
-	return a >= b ? a : b;
-}
 
 TEST(CDWordArray, SetSizeLT0)
 {
@@ -202,7 +198,7 @@ TEST(CDWordArray, SetSizeLT0)
 	EXPECT_EQ(0, cd.GetSize());
 }
 
-TEST(CDWordArray, SetSizeDATANULL)
+TEST(CDWordArray, SetSizeEmptyArray)
 {
 	CDWordArray cd;
 	cd.SetSize(10);
@@ -265,6 +261,12 @@ TEST(CDWordArray, setAtGrowGTSize)
 	EXPECT_EQ(9, cd.GetAt(10));
 }
 
+TEST(CDWordArray, AddIfEmpty)
+{
+	CDWordArray cd;
+	EXPECT_EQ(0, cd.Add(1));
+}
+
 TEST(CDWordArray, Add)
 {
 	CDWordArray cd;
@@ -272,6 +274,7 @@ TEST(CDWordArray, Add)
 	cd.Add(5);
 	cd.Add(20);
 	EXPECT_EQ(3, cd.Add(15));
+	EXPECT_EQ(4, cd.GetSize());
 }
 
 TEST(CDWordArray, getSize)
@@ -296,6 +299,23 @@ TEST(CDWordArray, removeAll)
 	cd.Add(20);
 	cd.RemoveAll();
 	EXPECT_EQ(0, cd.GetSize());
+}
+
+TEST(CDWordArray, removeAllIfEmpty)
+{
+	CDWordArray cd;
+	cd.RemoveAll();
+	EXPECT_EQ(0, cd.GetSize());
+}
+
+TEST(CDWordArray, GetAt)
+{
+	CDWordArray cd;
+	cd.Add(10);
+	cd.Add(5);
+	cd.Add(20);
+	EXPECT_EQ(5, cd.GetAt(1));
+	//std::cout << cd.GetAt(0) << std::endl;
 }
 
 
